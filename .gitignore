@@ -1,0 +1,8 @@
+myenv
+.env
+__pycache__
+bash.exe.stackdump
+venv
+app.jsx
+temp_input.wav
+OSR_us_000_0010_8k.wav

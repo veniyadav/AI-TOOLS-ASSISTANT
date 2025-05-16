@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+requests
+torch
+asyncio
+langchain-groq
+edge-tts
+vosk
+python-magic
+langchain
+langchain_groq
+pydantic
+typing
+python-dotenv
+python-multipart
