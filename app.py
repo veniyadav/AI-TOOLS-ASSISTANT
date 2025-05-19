@@ -216,11 +216,11 @@ async def voice_assistant_endpoint(audio_file: UploadFile = File(...)):
 
     # Check for navigation commands
     redirect_url = None
-    lower_text = user_transcript.lower() + " " + llm_response.lower()
-    for key, url in navigation_commands.items():
-        if key.lower() in lower_text and ("navigate" in lower_text or "redirect" in lower_text):
-            redirect_url = url
-            break
+    url_pattern = r'(https?://[^\s]+/)'
+    found_urls = re.findall(url_pattern, llm_response)
+    if found_urls:
+        redirect_url = found_urls[0]  # You can use all if needed
+
 
     # Convert LLM response to speech
     tts_filename = "static/output.wav"
