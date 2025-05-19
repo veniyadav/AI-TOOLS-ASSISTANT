@@ -1,6 +1,7 @@
 import os
 import json
 import zipfile
+import uuid
 import requests
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -144,21 +145,6 @@ async def chat_endpoint(data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM invocation error: {e}")
     
-    # Check for navigation commands.
-    # redirect_url = None
-    # lower_text = human_message.lower() + " " + ai_response.lower()
-    # for key, url in navigation_commands.items():
-    #     if key.lower() in lower_text and ("navigate" in lower_text or "redirect" in lower_text):
-    #         redirect_url = url
-    #         break
-
-    # result = {"response": ai_response}
-    # if redirect_url:
-    #     result["redirect_url"] = redirect_url
-    # return result
-    # url_pattern = r'(https?://[^\s]+)'
-    # found_urls = re.findall(url_pattern, ai_response)
-     # Find both full URLs and relative routes
     url_pattern = r'(https?://[^\s]+|/\w[\w/-]*)'
     found_urls = re.findall(url_pattern, ai_response)
 
@@ -167,13 +153,87 @@ async def chat_endpoint(data: dict):
         result["redirect_url"] = found_urls[0]  # You can use all if needed
     return result
 
+# @app.post("/voice_assistant")
+# async def voice_assistant_endpoint(audio_file: UploadFile = File(...)):
+#     # print(audio_file)
+#     if not audio_file:
+#         raise HTTPException(status_code=400, detail="No audio file provided.")
+
+#     temp_audio_path = "temp_input.wav"
+#     contents = await audio_file.read()
+    
+#     with open(temp_audio_path, "wb") as f:
+#         f.write(contents)
+
+#     # Open the WAV file and check format
+#     try:
+#         with wave.open(temp_audio_path, "rb") as wf:
+#             channels = wf.getnchannels()
+#             sample_width = wf.getsampwidth()
+#             comp_type = wf.getcomptype()
+
+#             # Auto-convert to mono PCM 16-bit if needed
+#             if channels != 1 or sample_width != 2 or comp_type != "NONE":
+#                 raise HTTPException(status_code=400, detail="Audio must be 16-bit mono PCM WAV.")
+
+#             rec = KaldiRecognizer(vosk_model, wf.getframerate())
+#             result_text = ""
+
+#             while True:
+#                 data = wf.readframes(4000)
+#                 if len(data) == 0:
+#                     break
+#                 if rec.AcceptWaveform(data):
+#                     res = json.loads(rec.Result())
+#                     result_text += res.get("text", "") + " "
+
+#             final_res = json.loads(rec.FinalResult())
+#             result_text += final_res.get("text", "")
+#             user_transcript = result_text.strip()
+
+#             if not user_transcript:
+#                 raise HTTPException(status_code=500, detail="Failed to transcribe audio.")
+
+#     except wave.Error as e:
+#         raise HTTPException(status_code=500, detail=f"Error processing audio: {e}")
+
+#     # Generate LLM response
+#     try:
+#         llm_response = generate_response(user_transcript)
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"LLM invocation error: {e}")
+
+#     # Check for navigation commands
+#     redirect_url = None
+#     # url_pattern = r'(https?://[^\s]+/)'
+#     # found_urls = re.findall(url_pattern, llm_response)
+#      # Find both full URLs and relative routes
+#     url_pattern = r'(https?://[^\s]+|/\w[\w/-]*)'
+#     found_urls = re.findall(url_pattern, llm_response)
+#     if found_urls:
+#         redirect_url = found_urls[0]  # You can use all if needed
+
+
+#     # Convert LLM response to speech
+#     tts_filename = "static/output.wav"
+#     await text_to_speech(llm_response, tts_filename)
+
+#     result = {
+#         "transcription": user_transcript,
+#         "response": llm_response,
+#         "audio_url": "/static/output.wav"
+#     }
+#     if redirect_url:
+#         result["redirect_url"] = redirect_url
+#     return result
+
 @app.post("/voice_assistant")
 async def voice_assistant_endpoint(audio_file: UploadFile = File(...)):
-    # print(audio_file)
     if not audio_file:
         raise HTTPException(status_code=400, detail="No audio file provided.")
 
-    temp_audio_path = "temp_input.wav"
+    # Create a unique temporary file name for the uploaded audio
+    temp_audio_path = f"temp_input_{uuid.uuid4().hex}.wav"
     contents = await audio_file.read()
     
     with open(temp_audio_path, "wb") as f:
@@ -217,28 +277,35 @@ async def voice_assistant_endpoint(audio_file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM invocation error: {e}")
 
-    # Check for navigation commands
+    # Check for navigation commands (URLs)
     redirect_url = None
-    # url_pattern = r'(https?://[^\s]+/)'
-    # found_urls = re.findall(url_pattern, llm_response)
-     # Find both full URLs and relative routes
     url_pattern = r'(https?://[^\s]+|/\w[\w/-]*)'
     found_urls = re.findall(url_pattern, llm_response)
     if found_urls:
         redirect_url = found_urls[0]  # You can use all if needed
 
+    # Generate a unique file name for the TTS audio file
+    tts_filename = f"static/{uuid.uuid4().hex}.wav"  # Unique file name for each request
 
     # Convert LLM response to speech
-    tts_filename = "static/output.wav"
     await text_to_speech(llm_response, tts_filename)
+
+    # Construct the public URL for the audio file
+    BASE_URL = os.getenv("BASE_URL")  # Ensure your BASE_URL is set
+    audio_url = f"{BASE_URL}/static/{os.path.basename(tts_filename)}"
 
     result = {
         "transcription": user_transcript,
         "response": llm_response,
-        "audio_url": "/static/output.wav"
+        "audio_url": audio_url
     }
+    
     if redirect_url:
         result["redirect_url"] = redirect_url
+    
+    # Clean up the temporary file
+    os.remove(temp_audio_path)
+
     return result
 # RUN THE APP
 # -----------------------------------------------------------------------------
