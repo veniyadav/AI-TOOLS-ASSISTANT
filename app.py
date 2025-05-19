@@ -18,7 +18,7 @@ from globalllm import GroqLLM
 import re
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static",follow_symlinks=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 # Enable CORS for all origins.
 app.add_middleware(
     CORSMiddleware,
