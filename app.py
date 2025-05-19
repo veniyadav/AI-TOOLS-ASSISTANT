@@ -156,7 +156,10 @@ async def chat_endpoint(data: dict):
     # if redirect_url:
     #     result["redirect_url"] = redirect_url
     # return result
-    url_pattern = r'(https?://[^\s]+)'
+    # url_pattern = r'(https?://[^\s]+)'
+    # found_urls = re.findall(url_pattern, ai_response)
+     # Find both full URLs and relative routes
+    url_pattern = r'(https?://[^\s]+|/\w[\w/-]*)'
     found_urls = re.findall(url_pattern, ai_response)
 
     result = {"response": ai_response}
@@ -216,7 +219,10 @@ async def voice_assistant_endpoint(audio_file: UploadFile = File(...)):
 
     # Check for navigation commands
     redirect_url = None
-    url_pattern = r'(https?://[^\s]+/)'
+    # url_pattern = r'(https?://[^\s]+/)'
+    # found_urls = re.findall(url_pattern, llm_response)
+     # Find both full URLs and relative routes
+    url_pattern = r'(https?://[^\s]+|/\w[\w/-]*)'
     found_urls = re.findall(url_pattern, llm_response)
     if found_urls:
         redirect_url = found_urls[0]  # You can use all if needed
