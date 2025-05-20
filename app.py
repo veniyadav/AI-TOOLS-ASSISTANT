@@ -50,8 +50,8 @@ navigation_commands = {}
 # MODEL_NAME = "vosk-model-en-in-0.5"
 # MODEL_ZIP_PATH = os.path.join(MODEL_DIR, f"{MODEL_NAME}.zip")
 # MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-en-in-0.5.zip"
-processor = AutoProcessor.from_pretrained("openai/whisper-base.en")
-model = AutoModelForSpeechSeq2Seq.from_pretrained("openai/whisper-base.en")
+processor = AutoProcessor.from_pretrained("openai/whisper-base")
+model = AutoModelForSpeechSeq2Seq.from_pretrained("openai/whisper-base")
 # --------------------------------------------------------------------------
 # Download and Extract Model if Not Exists
 # --------------------------------------------------------------------------
