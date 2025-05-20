@@ -5,7 +5,7 @@ torch
 asyncio
 langchain-groq
 edge-tts
-vosk
+# vosk
 python-magic
 langchain
 langchain_groq
@@ -13,3 +13,6 @@ pydantic
 typing
 python-dotenv
 python-multipart
+transformers 
+torch
+librosa  
