@@ -19,6 +19,7 @@ from globalllm import GroqLLM
 import re
 from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
 import torch
+from rag_engine import search_routes
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -92,17 +93,16 @@ async def text_to_speech(text: str, filename: str = "static/output.wav"):
 # LLM HELPER FUNCTION (ChatGroq)
 # -----------------------------------------------------------------------------
 def generate_response(user_text: str) -> str:
-    # Create a ChatGroq client with the provided API key.
-    # Build the combined system prompt:
-    manual = system_prompt.get("manual") or ""
-    url_comp = system_prompt.get("url") or ""
-    manual_str = safe_str(manual)
-    url_comp_str = safe_str(url_comp)
-    combined_prompt = manual_str + "\n" + url_comp_str if manual_str and url_comp_str else manual_str or url_comp_str
+    # Search routes
+    top_matches = search_routes(user_text, k=3)
+    context = "\n".join(f"{name}: {path}" for name, path in top_matches)
+
+    combined_prompt = f"You are a navigation assistant.\nHere are the available routes:\n{context}\n\nAnswer the user's question based on these routes."
     messages = [
         ("system", combined_prompt),
         ("human", user_text),
     ]
+
     ai_msg = groq_llm.invoke(messages)
     return ai_msg.content
 

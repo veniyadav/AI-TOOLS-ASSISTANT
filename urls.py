@@ -1,4 +1,5 @@
 url ={
+  "home":"/",
   "aitools": "/aitools",
   "imagemindai": "/imagemindai",
   "ailearninghub": "/ailearninghub",

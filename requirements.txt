@@ -16,3 +16,6 @@ python-multipart
 transformers 
 torch
 librosa  
+sentence_transformers
+faiss-cpu    #faiss 
+librosa
